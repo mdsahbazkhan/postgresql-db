@@ -33,4 +33,28 @@ export class EmployeesService {
     const update = Object.assign(employee, updateData);
     return this.employeeRepositry.save(update);
   }
+  async deleteEmployee(id: number): Promise<{ message: string }> {
+    const result = await this.employeeRepositry.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Employee with ID ${id} not found`);
+    }
+    return { message: `Employee with Id ${id} has been deleted!` };
+  }
+  async search(filters: {
+    name?: string;
+    department?: string;
+  }): Promise<Employee[]> {
+    const query = this.employeeRepositry.createQueryBuilder('employee');
+    if (filters.name) {
+      query.andWhere('employee.name ILIKE :name', {
+        name: `%${filters.name}%`,
+      });
+    }
+    if (filters.department) {
+      query.andWhere('employee.department = :department', {
+        department: `${filters.department}`,
+      });
+    }
+    return query.getMany();
+  }
 }
